@@ -27,6 +27,54 @@ async function run() {
             res.send(services);
         })
 
+        /*   app.get('/available', async (req, res) => {
+              const date = req.query.date || 'May 15, 2022'
+              // step 1: get all services
+              const services = await serviceCollection.find().toArray();
+              // step 2: get the booking of that day
+              const query = { date: date }
+              const booking = await bookingCollection.find(query).toArray();
+              // step 3: for each service, find bookings for that service
+              services.forEach(service => {
+                  const serviceBooking = booking.filter(b => b.treatment === service.name);
+                  const booked = serviceBooking.map(s => s.slot);
+                  const available = service.slots.filter(s => !booked.includes(s));
+                  service.available = available;
+                  // set booked in service for see
+                  // service.booked = booked;
+              })
+              res.send(services);
+          }) */
+
+        //   Warning
+        //   This is not the proper way to query
+        //  after learning more about mongodb, use aggregate, lookup, pipeline, match, group
+        app.get('/available', async (req, res) => {
+            const date = req.query.date;
+            // step 1: get all services
+            const services = await serviceCollection.find().toArray();
+
+            // step 2: get booking of that day. output : [{}, {}, {}, {}, {}, {}, {}]
+            const query = { data: date }
+            const booking = await bookingCollection.find(query).toArray();
+
+            // step 3: for each service
+            services.forEach(service => {
+                // step 4:  find booking for that service. output : [{}, {}, {}]
+                const serviceBooking = booking.filter(book => book.treatment === service.name);
+
+                // step 5: select slots for the service booking: Output: ['', '', '', '', '']
+                const bookedSlots = serviceBooking.map(book => book.slot);
+
+                // step 6: select those slots that are not in bookslots
+                const available = service.slots.filter(slot => !bookedSlots.includes(slot));
+
+                // step 7: set available to slots to make it easier
+                service.slots = available;
+            })
+            res.send(services)
+        })
+
         app.post('/booking', async (req, res) => {
             const booking = req.body;
             const query = { treatment: booking.treatment, date: booking.date, patientEmail: booking.patientEmail }
