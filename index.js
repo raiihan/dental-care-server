@@ -55,7 +55,7 @@ async function run() {
             const services = await serviceCollection.find().toArray();
 
             // step 2: get booking of that day. output : [{}, {}, {}, {}, {}, {}, {}]
-            const query = { data: date }
+            const query = { date: date }
             const booking = await bookingCollection.find(query).toArray();
 
             // step 3: for each service
@@ -73,6 +73,13 @@ async function run() {
                 service.slots = available;
             })
             res.send(services)
+        })
+
+        app.get('/booking', async (req, res) => {
+            const patientEmail = req.query.patientEmail;
+            const query = { patientEmail: patientEmail };
+            const bookings = await bookingCollection.find(query).toArray();
+            res.send(bookings);
         })
 
         app.post('/booking', async (req, res) => {
